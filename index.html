@@ -1,0 +1,772 @@
+﻿<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Médico Lcdo. JUAN PLAZA - Sistema</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #eff6ff, #f0fdf4); min-height: 100vh; position: relative; overflow-x: hidden; }
+        .boton-menu { text-align: left; cursor: pointer; transition: all 0.3s ease; }
+        .boton-menu:hover { transform: translateY(-3px); }
+        .seccion-contenido { animation: aparecer 0.4s ease-out; }
+        @keyframes aparecer { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        input:focus, textarea:focus, select:focus { outline: none; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
+        .nota-item { background: #fff9c4; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 0.5rem; position: relative; }
+        .cita-item { background: #f3e8ff; border-left: 4px solid #8b5cf6; padding: 1rem; border-radius: 0.5rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
+        .paciente-item { background: #e0f2fe; border-left: 4px solid #0ea5e9; padding: 1rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; margin-bottom: 0.5rem; }
+        .paciente-item:hover { background: #bae6fd; transform: translateX(5px); }
+        @media (max-width: 768px) { .cita-item { flex-direction: column; } }
+        
+        .imagen-lateral { 
+            position: absolute; 
+            top: 10%; 
+            height: 80%; 
+            z-index: 0; 
+            opacity: 0.8; 
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .imagen-izquierda { left: 2%; }
+        .imagen-derecha { right: 2%; transform: scaleX(-1); }
+        .ocultar { opacity: 0; visibility: hidden; }
+
+        /* Modal para ver detalles del paciente */
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-contenido { background-color: #fefefe; margin: 2% auto; padding: 20px; border: 1px solid #888; width: 95%; max-width: 700px; border-radius: 12px; max-height: 90vh; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <!-- Imágenes decorativas a los lados -->
+    <img id="imgIzquierda" src="4.jpeg"  class="imagen-lateral imagen-izquierda">
+    <img id="imgDerecha" src="4.jpeg"  class="imagen-lateral imagen-derecha">
+
+    <!-- Pantalla de inicio de sesión -->
+    <div id="pantallaLogin" class="flex items-center justify-center min-h-screen relative z-10">
+        <div class="absolute top-4 left-6 flex items-center gap-2">
+            <img src="3.jpeg" alt="Logo Salud" class="w-10 h-10 object-contain">
+            <div class="flex flex-col gap-1">
+                <h2 class="text-2xl font-extrabold text-blue-600">NUTRIMEDICS</h2>
+                <p class="bg-green-600 text-white text-sm px-3 py-1 rounded-md text-center font-bold whitespace-nowrap">Centro Nutricional de Medicina Alterna y Ancestral</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all hover:scale-105 relative z-20">
+            <div class="text-center mb-8">
+                <i class="fa fa-user-md text-5xl text-blue-600 mb-3"></i>
+                <h2 class="text-2xl font-bold text-gray-800">Registro Médico Lcdo. JUAN PLAZA</h2>
+                <p class="text-gray-600">Ingresa tus credenciales para continuar</p>
+            </div>
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Usuario</label>
+                    <input type="text" id="usuario" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+				<div>
+					<label class="block text-gray-700 font-medium mb-2">Contraseña</label>
+					<div class="relative">
+						<input type="password" id="contrasena" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 pr-10">
+						<span id="verClave" class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-blue-600">
+							<i class="fa fa-eye-slash text-lg"></i>
+						</span>
+					</div>
+				</div>
+                <button id="btnIngresar" class="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-green-700 transition-all shadow-lg">
+                    Ingresar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla principal del sistema -->
+    <div id="pantallaPrincipal" class="hidden relative z-10">
+        <nav class="bg-white shadow-lg px-6 py-4 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <img src="3.jpeg" alt="Logo Salud" class="w-10 h-10 object-contain">
+                    <div class="flex flex-col gap-1">
+                        <h2 class="text-2xl font-extrabold text-blue-600">NUTRIMEDICS</h2>
+                        <p class="bg-green-600 text-white text-sm px-3 py-1 rounded-md text-center font-bold whitespace-nowrap">Centro Nutricional de Medicina Alterna y Ancestral</p>
+                    </div>
+                </div>
+                <button id="btnCerrar" class="text-gray-600 hover:text-red-600 transition-colors">
+                    <i class="fa fa-sign-out mr-1"></i> Cerrar sesión
+                </button>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto p-4 md:p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                <button onclick="mostrarSeccion('agregar')" class="boton-menu bg-white rounded-xl p-6 shadow-md hover:shadow-xl border-l-4 border-blue-500">
+                    <i class="fa fa-user-plus text-3xl text-blue-600 mb-2"></i>
+                    <h3 class="font-bold text-gray-800">Agregar Paciente</h3>
+                    <p class="text-sm text-gray-600">Registrar nuevo paciente</p>
+                </button>
+                <button onclick="mostrarSeccion('buscar')" class="boton-menu bg-white rounded-xl p-6 shadow-md hover:shadow-xl border-l-4 border-green-500">
+                    <i class="fa fa-search text-3xl text-green-600 mb-2"></i>
+                    <h3 class="font-bold text-gray-800">Buscar Paciente</h3>
+                    <p class="text-sm text-gray-600">Consultar o editar datos</p>
+                </button>
+                <!-- NUEVO BOTÓN: VER TODOS LOS PACIENTES -->
+                <button onclick="mostrarSeccion('todos')" class="boton-menu bg-white rounded-xl p-6 shadow-md hover:shadow-xl border-l-4 border-sky-500">
+                    <i class="fa fa-users text-3xl text-sky-600 mb-2"></i>
+                    <h3 class="font-bold text-gray-800">Ver Pacientes</h3>
+                    <p class="text-sm text-gray-600">Lista completa</p>
+                </button>
+                <button onclick="mostrarSeccion('citas')" class="boton-menu bg-white rounded-xl p-6 shadow-md hover:shadow-xl border-l-4 border-purple-500">
+                    <i class="fa fa-calendar text-3xl text-purple-600 mb-2"></i>
+                    <h3 class="font-bold text-gray-800">Gestionar Citas</h3>
+                    <p class="text-sm text-gray-600">Administrar consultas</p>
+                </button>
+                <button onclick="mostrarSeccion('notas')" class="boton-menu bg-white rounded-xl p-6 shadow-md hover:shadow-xl border-l-4 border-orange-500">
+                    <i class="fa fa-sticky-note text-3xl text-orange-600 mb-2"></i>
+                    <h3 class="font-bold text-gray-800">Notas Rápidas</h3>
+                    <p class="text-sm text-gray-600">Editar y enviar</p>
+                </button>
+            </div>
+
+            <!-- Agregar Paciente >>> SIN WHATSAPP, CON UBICACIÓN -->
+            <section id="seccionAgregar" class="seccion-contenido hidden bg-green-50 rounded-2xl shadow-xl p-6 md:p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2"><i class="fa fa-user-plus text-blue-600"></i> Registro de Nuevo Paciente</h2>
+                <form id="formPaciente" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Cédula / Identificación *</label>
+                        <input type="text" id="cedula" class="w-full px-4 py-3 border border-gray-300 rounded-lg" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Nombres y Apellidos *</label>
+                        <input type="text" id="nombres" class="w-full px-4 py-3 border border-gray-300 rounded-lg" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Ubicación / Dirección *</label>
+                        <input type="text" id="ubicacion" class="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Dirección completa de domicilio" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Tipo de Sangre</label>
+                        <select id="sangre" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                            <option value="">Seleccionar...</option>
+                            <option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Teléfono</label>
+                        <input type="tel" id="telefono" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Correo Electrónico</label>
+                        <input type="email" id="correo" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Alergias</label>
+                        <input type="text" id="alergias" class="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Ej: Penicilina...">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-gray-700 font-medium mb-2">Antecedentes Médicos</label>
+                        <textarea id="antecedentes" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Enfermedades, cirugías..."></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-gray-700 font-medium mb-2">Detalle de Chequeo / Evaluación</label>
+                        <textarea id="chequeo" rows="6" class="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Diagnóstico, observaciones..."></textarea>
+                    </div>
+                    <div class="md:col-span-2 flex flex-wrap gap-3 mt-2">
+                        <button type="submit" class="bg-gradient-to-r from-blue-600 to-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-green-700 transition-all shadow-md"><i class="fa fa-save mr-2"></i> Guardar Paciente</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Buscar Paciente >>> CON ENVIAR WHATSAPP Y DESCARGAR ARCHIVO -->
+            <section id="seccionBuscar" class="seccion-contenido hidden bg-green-50 rounded-2xl shadow-xl p-6 md:p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2"><i class="fa fa-search text-green-600"></i> Buscar y Gestionar Paciente</h2>
+                <div class="mb-6 flex flex-col md:flex-row gap-3">
+                    <input type="text" id="buscarTexto" placeholder="Buscar por cédula o nombre..." class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    <button onclick="buscarPaciente()" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-all shadow-md"><i class="fa fa-search mr-2"></i> Buscar</button>
+                </div>
+                <div id="resultadoBusqueda" class="hidden">
+                    <form id="formEditarPaciente" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <input type="hidden" id="indiceEditar">
+                        <div><label class="block text-gray-700 font-medium mb-2">Cédula</label><input type="text" id="editarCedula" class="w-full px-4 py-3 border border-gray-300 rounded-lg" required></div>
+                        <div><label class="block text-gray-700 font-medium mb-2">Nombres y Apellidos</label><input type="text" id="editarNombres" class="w-full px-4 py-3 border border-gray-300 rounded-lg" required></div>
+                        <div><label class="block text-gray-700 font-medium mb-2">Ubicación / Dirección</label><input type="text" id="editarUbicacion" class="w-full px-4 py-3 border border-gray-300 rounded-lg"></div>
+                        <div><label class="block text-gray-700 font-medium mb-2">Tipo de Sangre</label><select id="editarSangre" class="w-full px-4 py-3 border border-gray-300 rounded-lg"><option value="">Seleccionar...</option><option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option></select></div>
+                        <div><label class="block text-gray-700 font-medium mb-2">Teléfono</label><input type="tel" id="editarTelefono" class="w-full px-4 py-3 border border-gray-300 rounded-lg"></div>
+                        <div><label class="block text-gray-700 font-medium mb-2">Correo</label><input type="email" id="editarCorreo" class="w-full px-4 py-3 border border-gray-300 rounded-lg"></div>
+                        <div><label class="block text-gray-700 font-medium mb-2">Alergias</label><input type="text" id="editarAlergias" class="w-full px-4 py-3 border border-gray-300 rounded-lg"></div>
+                        <div class="md:col-span-2"><label class="block text-gray-700 font-medium mb-2">Antecedentes Médicos</label><textarea id="editarAntecedentes" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg"></textarea></div>
+                        <div class="md:col-span-2"><label class="block text-gray-700 font-medium mb-2">Chequeo y Evaluación</label><textarea id="editarChequeo" rows="6" class="w-full px-4 py-3 border border-gray-300 rounded-lg"></textarea></div>
+                        <div class="md:col-span-2 flex flex-wrap gap-3 mt-2">
+                            <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all shadow-md"><i class="fa fa-pencil mr-2"></i> Guardar Cambios</button>
+                            <button type="button" onclick="eliminarPaciente()" class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all shadow-md"><i class="fa fa-trash mr-2"></i> Eliminar Paciente</button>
+                            <button type="button" id="btnEnviarEditar" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-all shadow-md"><i class="fa fa-whatsapp mr-2"></i> Enviar WhatsApp</button>
+                            <button type="button" id="btnDescargarPaciente" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-all shadow-md"><i class="fa fa-download mr-2"></i> Descargar Archivo</button>
+                        </div>
+                    </form>
+                </div>
+                <p id="mensajeBusqueda" class="text-gray-600 italic">Ingresa un dato para buscar...</p>
+            </section>
+
+            <!-- NUEVA SECCIÓN: VER TODOS LOS PACIENTES -->
+            <section id="seccionTodos" class="seccion-contenido hidden bg-green-50 rounded-2xl shadow-xl p-6 md:p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2"><i class="fa fa-users text-sky-600"></i> Lista Completa de Pacientes</h2>
+                
+                <div id="listaTodosPacientes" class="space-y-3 mb-6">
+                    <p class="text-gray-600 italic text-center">No hay pacientes registrados en el sistema.</p>
+                </div>
+            </section>
+
+            <!-- Citas Médicas >>> SIN CALENDARIO, SOLO LISTA -->
+            <section id="seccionCitas" class="seccion-contenido hidden bg-green-50 rounded-2xl shadow-xl p-6 md:p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2 justify-content-center"><i class="fa fa-calendar text-purple-600"></i> Gestión de Citas Médicas</h2>
+                
+                <form id="formCita" class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8 p-4 bg-purple-50 rounded-xl">
+                    <div><label class="block text-gray-700 font-medium mb-2">Paciente (Cédula o Nombre)</label><input type="text" id="citaPaciente" class="w-full px-4 py-3 border border-gray-300 rounded-lg" required></div>
+                    <div><label class="block text-gray-700 font-medium mb-2">Fecha</label><input type="date" id="citaFecha" class="w-full px-4 py-3 border border-gray-300 rounded-lg" required></div>
+                    <div><label class="block text-gray-700 font-medium mb-2">Hora</label><input type="time" id="citaHora" class="w-full px-4 py-3 border border-gray-300 rounded-lg" required></div>
+                    <div class="md:col-span-2"><label class="block text-gray-700 font-medium mb-2">Motivo de la consulta</label><input type="text" id="citaMotivo" class="w-full px-4 py-3 border border-gray-300 rounded-lg"></div>
+                    <div class="flex items-end"><button type="submit" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-all shadow-md"><i class="fa fa-calendar-plus-o mr-2"></i> Agendar Cita</button></div>
+                </form>
+
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">📋 Lista de Citas Registradas</h3>
+                <div id="listaCitas" class="space-y-4">
+                    <p class="text-gray-600 italic text-center">No hay citas agendadas.</p>
+                </div>
+            </section>
+
+            <!-- Notas Rápidas >>> CON EDITAR, ENVIAR Y DESCARGAR -->
+            <section id="seccionNotas" class="seccion-contenido hidden bg-green-50 rounded-2xl shadow-xl p-6 md:p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2"><i class="fa fa-sticky-note text-orange-600"></i> Notas Rápidas</h2>
+                <form id="formNota" class="mb-8">
+                    <textarea id="textoNota" rows="4" placeholder="Escribe aquí tu nota o recordatorio..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 mb-3"></textarea>
+                    <button type="submit" class="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-all shadow-md"><i class="fa fa-plus mr-2"></i> Guardar Nota</button>
+                </form>
+
+                <div id="editarNotaContainer" class="hidden mb-8 p-4 bg-yellow-50 rounded-xl border-2 border-orange-300">
+                    <h4 class="font-bold text-orange-800 mb-2">✏️ Editar Nota</h4>
+                    <textarea id="textoNotaEditar" rows="4" class="w-full px-4 py-3 border border-orange-300 rounded-lg mb-3"></textarea>
+                    <input type="hidden" id="idNotaEditar">
+                    <div class="flex gap-2">
+                        <button onclick="guardarEdicionNota()" class="bg-orange-600 text-white px-4 py-2 rounded">Guardar Cambios</button>
+                        <button onclick="cerrarEdicionNota()" class="bg-gray-500 text-white px-4 py-2 rounded">Cancelar</button>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Tus Notas</h3>
+                <div id="listaNotas" class="grid grid-cols-1 md:grid-cols-2 gap-4"><p class="text-gray-600 italic md:col-span-2">No hay notas guardadas.</p></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL PARA VER DETALLES COMPLETOS DEL PACIENTE -->
+    <div id="modalVerPaciente" class="modal">
+        <div class="modal-contenido">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-bold text-sky-700 flex items-center gap-2"><i class="fa fa-user-circle"></i> Ficha Completa del Paciente</h3>
+                <button onclick="cerrarModalPaciente()" class="text-gray-500 hover:text-red-600 text-xl">&times;</button>
+            </div>
+            
+            <div id="contenidoPacienteDetalle" class="space-y-3 mb-6 text-gray-700">
+                <!-- Aquí se carga toda la información -->
+            </div>
+
+            <div class="flex flex-wrap gap-3 justify-center border-t pt-4">
+                <button id="btnModalWhatsapp" class="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-all shadow-md"><i class="fa fa-whatsapp mr-2"></i> Enviar por WhatsApp</button>
+                <button id="btnModalDescargar" class="bg-purple-600 text-white px-5 py-2 rounded-lg hover:bg-purple-700 transition-all shadow-md"><i class="fa fa-download mr-2"></i> Descargar Archivo</button>
+                <button id="btnModalEliminar" class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition-all shadow-md"><i class="fa fa-trash mr-2"></i> Eliminar Paciente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA EDITAR / ELIMINAR CITA -->
+    <div id="modalCita" class="modal">
+        <div class="modal-contenido">
+            <h3 class="text-xl font-bold text-purple-700 mb-4 flex items-center gap-2"><i class="fa fa-calendar-check-o"></i> Gestionar Cita</h3>
+            <input type="hidden" id="idCitaEditar">
+            <div class="grid grid-cols-1 gap-4 mb-4">
+                <div><label class="text-gray-700 font-medium mb-1">Paciente</label><input type="text" id="modPaciente" class="w-full px-3 py-2 border rounded"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-gray-700 font-medium mb-1">Fecha</label><input type="date" id="modFecha" class="w-full px-3 py-2 border rounded"></div>
+                    <div><label class="text-gray-700 font-medium mb-1">Hora</label><input type="time" id="modHora" class="w-full px-3 py-2 border rounded"></div>
+                </div>
+                <div><label class="text-gray-700 font-medium mb-1">Motivo</label><input type="text" id="modMotivo" class="w-full px-3 py-2 border rounded"></div>
+            </div>
+            <div class="flex justify-between gap-2">
+                <button onclick="guardarEdicionCita()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"><i class="fa fa-save mr-1"></i> Guardar Cambios</button>
+                <button onclick="eliminarCitaDesdeCalendario()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"><i class="fa fa-trash mr-1"></i> Eliminar Cita</button>
+                <button onclick="cerrarModalCita()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cerrar</button>
+            </div>
+        </div>
+    </div>
+<script>
+    // 🔑 CONFIGURA AQUÍ TUS DATOS DE JSONBIN.IO
+    const API_KEY = "TU_API_KEY_AQUÍ"; // Pega tu API Key entre comillas
+    const BIN_ID = "TU_ID_DEL_BIN_AQUÍ"; // Pega tu ID del Bin entre comillas
+
+    let pacientes = [];
+    let citas = [];
+    let notas = [];
+    let indicePacienteActual = null;
+
+    const pantallaLogin = document.getElementById('pantallaLogin');
+    const pantallaPrincipal = document.getElementById('pantallaPrincipal');
+    const imgIzquierda = document.getElementById('imgIzquierda');
+    const imgDerecha = document.getElementById('imgDerecha');
+    const modalCita = document.getElementById('modalCita');
+    const modalVerPaciente = document.getElementById('modalVerPaciente');
+
+    // 💾 FUNCIÓN PARA GUARDAR TODO EN LA NUBE
+    async function guardarDatosEnNube() {
+        try {
+            const respuesta = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': API_KEY
+                },
+                body: JSON.stringify({ pacientes, citas, notas })
+            });
+            const dato = await respuesta.json();
+            console.log("Datos guardados correctamente", dato);
+        } catch (error) {
+            alert("Error al guardar: " + error);
+        }
+    }
+
+    // 📥 FUNCIÓN PARA CARGAR LOS DATOS DESDE LA NUBE AL INICIAR
+    async function cargarDatosDeNube() {
+        try {
+            const respuesta = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                method: 'GET',
+                headers: {
+                    'X-Master-Key': API_KEY
+                }
+            });
+            const dato = await respuesta.json();
+            if(dato.record) {
+                pacientes = dato.record.pacientes || [];
+                citas = dato.record.citas || [];
+                notas = dato.record.notas || [];
+            }
+            actualizarListaTodosPacientes();
+            actualizarListaCitas();
+            actualizarNotas();
+        } catch (error) {
+            alert("Error al cargar datos: " + error);
+        }
+    }
+
+    // Función para mostrar/ocultar contraseña
+    const verClave = document.getElementById('verClave');
+    const inputClave = document.getElementById('contrasena');
+
+    verClave.addEventListener('click', () => {
+        const tipo = inputClave.type === 'password' ? 'text' : 'password';
+        inputClave.type = tipo;
+        verClave.innerHTML = tipo === 'password' 
+            ? '<i class="fa fa-eye-slash text-lg"></i>' 
+            : '<i class="fa fa-eye text-lg"></i>';
+    });
+
+    document.getElementById('btnIngresar').addEventListener('click', () => {
+        const usu = document.getElementById('usuario').value;
+        const pass = document.getElementById('contrasena').value;
+        if (usu === 'JuanP' && pass === '2026.juanp.') {
+            pantallaLogin.classList.add('hidden');
+            pantallaPrincipal.classList.remove('hidden');
+            imgIzquierda.classList.add('ocultar');
+            imgDerecha.classList.add('ocultar');
+            cargarDatosDeNube(); // Cargar todos los datos al entrar
+        } else { alert('Usuario o contraseña incorrectos'); }
+    });
+
+    document.getElementById('btnCerrar').addEventListener('click', () => {
+        pantallaPrincipal.classList.add('hidden');
+        pantallaLogin.classList.remove('hidden');
+        imgIzquierda.classList.remove('ocultar');
+        imgDerecha.classList.remove('ocultar');
+    });
+
+    function mostrarSeccion(nombre) {
+        document.querySelectorAll('.seccion-contenido').forEach(s => s.classList.add('hidden'));
+        document.getElementById(`seccion${nombre.charAt(0).toUpperCase() + nombre.slice(1)}`).classList.remove('hidden');
+        if(nombre === 'todos') actualizarListaTodosPacientes();
+    }
+
+    function generarTextoPaciente(datos) {
+        return `*📋 REGISTRO DE PACIENTE*
+🆔 Cédula: ${datos.cedula}
+👤 Nombres: ${datos.nombres}
+📍 Ubicación: ${datos.ubicacion || 'No registrada'}
+🩸 Tipo de Sangre: ${datos.sangre || 'No registrado'}
+📞 Teléfono: ${datos.telefono || 'No registrado'}
+📧 Correo: ${datos.correo || 'No registrado'}
+⚠️ Alergias: ${datos.alergias || 'Ninguna'}
+
+*📑 ANTECEDENTES MÉDICOS:*
+${datos.antecedentes || 'Sin antecedentes registrados'}
+
+*🩺 DETALLE DE CHEQUEO Y EVALUACIÓN:*
+${datos.chequeo || 'Sin observaciones registradas'}
+
+📄 Documento generado el: ${new Date().toLocaleString()}`;
+    }
+
+    function descargarArchivo(contenido, nombreArchivo) {
+        const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nombreArchivo;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    }
+
+    document.getElementById('formPaciente').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nuevo = {
+            cedula: document.getElementById('cedula').value,
+            nombres: document.getElementById('nombres').value,
+            ubicacion: document.getElementById('ubicacion').value,
+            sangre: document.getElementById('sangre').value,
+            telefono: document.getElementById('telefono').value,
+            correo: document.getElementById('correo').value,
+            alergias: document.getElementById('alergias').value,
+            antecedentes: document.getElementById('antecedentes').value,
+            chequeo: document.getElementById('chequeo').value
+        };
+        pacientes.push(nuevo);
+        await guardarDatosEnNube(); // Guardar en la nube
+        alert('✅ Paciente guardado correctamente');
+        e.target.reset();
+    });
+
+    function buscarPaciente() {
+        const termino = document.getElementById('buscarTexto').value.trim().toLowerCase();
+        const divRes = document.getElementById('resultadoBusqueda');
+        const msg = document.getElementById('mensajeBusqueda');
+        if (!termino) { divRes.classList.add('hidden'); msg.classList.remove('hidden'); msg.textContent = 'Ingresa un dato para buscar...'; return; }
+        const encontrado = pacientes.find(p => p.cedula.toLowerCase().includes(termino) || p.nombres.toLowerCase().includes(termino));
+        if (encontrado) {
+            msg.classList.add('hidden'); divRes.classList.remove('hidden');
+            document.getElementById('indiceEditar').value = pacientes.indexOf(encontrado);
+            document.getElementById('editarCedula').value = encontrado.cedula;
+            document.getElementById('editarNombres').value = encontrado.nombres;
+            document.getElementById('editarUbicacion').value = encontrado.ubicacion || '';
+            document.getElementById('editarSangre').value = encontrado.sangre;
+            document.getElementById('editarTelefono').value = encontrado.telefono;
+            document.getElementById('editarCorreo').value = encontrado.correo;
+            document.getElementById('editarAlergias').value = encontrado.alergias;
+            document.getElementById('editarAntecedentes').value = encontrado.antecedentes;
+            document.getElementById('editarChequeo').value = encontrado.chequeo;
+        } else { divRes.classList.add('hidden'); msg.classList.remove('hidden'); msg.textContent = '❌ Paciente no encontrado'; }
+    }
+
+    document.getElementById('formEditarPaciente').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const idx = parseInt(document.getElementById('indiceEditar').value);
+        pacientes[idx] = {
+            cedula: document.getElementById('editarCedula').value,
+            nombres: document.getElementById('editarNombres').value,
+            ubicacion: document.getElementById('editarUbicacion').value,
+            sangre: document.getElementById('editarSangre').value,
+            telefono: document.getElementById('editarTelefono').value,
+            correo: document.getElementById('editarCorreo').value,
+            alergias: document.getElementById('editarAlergias').value,
+            antecedentes: document.getElementById('editarAntecedentes').value,
+            chequeo: document.getElementById('editarChequeo').value
+        };
+        await guardarDatosEnNube(); // Guardar cambios
+        alert('✅ Cambios guardados');
+    });
+
+    async function eliminarPaciente() {
+        if (confirm('¿Seguro que quieres eliminar este paciente? Esta acción no se puede deshacer.')) {
+            const idx = parseInt(document.getElementById('indiceEditar').value);
+            pacientes.splice(idx, 1);
+            await guardarDatosEnNube();
+            document.getElementById('resultadoBusqueda').classList.add('hidden');
+            document.getElementById('mensajeBusqueda').classList.remove('hidden');
+            document.getElementById('mensajeBusqueda').textContent = 'Paciente eliminado correctamente';
+            actualizarListaTodosPacientes();
+        }
+    }
+
+    document.getElementById('btnEnviarEditar').addEventListener('click', () => {
+        const datos = {
+            cedula: document.getElementById('editarCedula').value,
+            nombres: document.getElementById('editarNombres').value,
+            ubicacion: document.getElementById('editarUbicacion').value,
+            sangre: document.getElementById('editarSangre').value,
+            telefono: document.getElementById('editarTelefono').value,
+            correo: document.getElementById('editarCorreo').value,
+            alergias: document.getElementById('editarAlergias').value,
+            antecedentes: document.getElementById('editarAntecedentes').value,
+            chequeo: document.getElementById('editarChequeo').value
+        };
+        const texto = encodeURIComponent(generarTextoPaciente(datos));
+        window.open(`https://wa.me/?text=${texto}`, '_blank');
+    });
+
+    document.getElementById('btnDescargarPaciente').addEventListener('click', () => {
+        const datos = {
+            cedula: document.getElementById('editarCedula').value,
+            nombres: document.getElementById('editarNombres').value,
+            ubicacion: document.getElementById('editarUbicacion').value,
+            sangre: document.getElementById('editarSangre').value,
+            telefono: document.getElementById('editarTelefono').value,
+            correo: document.getElementById('editarCorreo').value,
+            alergias: document.getElementById('editarAlergias').value,
+            antecedentes: document.getElementById('editarAntecedentes').value,
+            chequeo: document.getElementById('editarChequeo').value
+        };
+        const contenido = generarTextoPaciente(datos).replace(/\*/g, '').replace(/🆔|👤|📍|🩸|📞|📧|⚠️|📑|🩺|📄/g, '');
+        const nombreArchivo = `Paciente_${datos.nombres.replace(/\s/g, '_')}_${datos.cedula}.txt`;
+        descargarArchivo(contenido, nombreArchivo);
+    });
+
+    function actualizarListaTodosPacientes() {
+        const lista = document.getElementById('listaTodosPacientes');
+        if (pacientes.length === 0) {
+            lista.innerHTML = '<p class="text-gray-600 italic text-center">No hay pacientes registrados en el sistema.</p>';
+            return;
+        }
+        lista.innerHTML = '';
+        pacientes.forEach((p, index) => {
+            const div = document.createElement('div');
+            div.className = 'paciente-item';
+            div.onclick = () => abrirModalPaciente(index);
+            div.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h4 class="font-bold text-sky-900">${p.nombres}</h4>
+                        <p class="text-sm text-gray-600">Cédula: ${p.cedula} | Teléfono: ${p.telefono || 'Sin registrar'}</p>
+                    </div>
+                    <i class="fa fa-chevron-right text-sky-500"></i>
+                </div>
+            `;
+            lista.appendChild(div);
+        });
+    }
+
+    function abrirModalPaciente(index) {
+        indicePacienteActual = index;
+        const p = pacientes[index];
+        const contenido = document.getElementById('contenidoPacienteDetalle');
+        
+        contenido.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><strong class="text-sky-800">Cédula / ID:</strong> ${p.cedula}</div>
+                <div><strong class="text-sky-800">Nombre Completo:</strong> ${p.nombres}</div>
+                <div class="md:col-span-2"><strong class="text-sky-800">Ubicación / Dirección:</strong> ${p.ubicacion || 'No registrada'}</div>
+                <div><strong class="text-sky-800">Tipo de Sangre:</strong> ${p.sangre || 'No registrado'}</div>
+                <div><strong class="text-sky-800">Teléfono:</strong> ${p.telefono || 'No registrado'}</div>
+                <div><strong class="text-sky-800">Correo:</strong> ${p.correo || 'No registrado'}</div>
+                <div class="md:col-span-2"><strong class="text-sky-800">Alergias:</strong> ${p.alergias || 'Ninguna'}</div>
+                <div class="md:col-span-2"><strong class="text-sky-800">Antecedentes Médicos:</strong><p class="whitespace-pre-line mt-1 bg-gray-50 p-2 rounded">${p.antecedentes || 'Sin antecedentes registrados'}</p></div>
+                <div class="md:col-span-2"><strong class="text-sky-800">Chequeo y Evaluación:</strong><p class="whitespace-pre-line mt-1 bg-gray-50 p-2 rounded">${p.chequeo || 'Sin observaciones registradas'}</p></div>
+            </div>
+        `;
+
+        document.getElementById('btnModalWhatsapp').onclick = () => {
+            const texto = encodeURIComponent(generarTextoPaciente(p));
+            window.open(`https://wa.me/?text=${texto}`, '_blank');
+        };
+
+        document.getElementById('btnModalDescargar').onclick = () => {
+            const contenidoTxt = generarTextoPaciente(p).replace(/\*/g, '').replace(/🆔|👤|📍|🩸|📞|📧|⚠️|📑|🩺|📄/g, '');
+            const nombreArchivo = `Paciente_${p.nombres.replace(/\s/g, '_')}_${p.cedula}.txt`;
+            descargarArchivo(contenidoTxt, nombreArchivo);
+        };
+
+        document.getElementById('btnModalEliminar').onclick = async () => {
+            if(confirm('¿Seguro que deseas ELIMINAR PERMANENTEMENTE a este paciente?')){
+                pacientes.splice(indicePacienteActual, 1);
+                await guardarDatosEnNube();
+                cerrarModalPaciente();
+                actualizarListaTodosPacientes();
+                alert('🗑️ Paciente eliminado correctamente');
+            }
+        };
+
+        modalVerPaciente.style.display = "block";
+    }
+
+    function cerrarModalPaciente() {
+        modalVerPaciente.style.display = "none";
+        indicePacienteActual = null;
+    }
+
+    document.getElementById('formCita').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nueva = { 
+            id: Date.now(), 
+            paciente: document.getElementById('citaPaciente').value, 
+            fecha: document.getElementById('citaFecha').value, 
+            hora: document.getElementById('citaHora').value, 
+            motivo: document.getElementById('citaMotivo').value 
+        };
+        citas.push(nueva);
+        await guardarDatosEnNube();
+        actualizarListaCitas();
+        e.target.reset();
+    });
+
+    function actualizarListaCitas() {
+        const lista = document.getElementById('listaCitas');
+        if (citas.length === 0) {
+            lista.innerHTML = '<p class="text-gray-600 italic text-center">No hay citas agendadas.</p>';
+            return;
+        }
+        lista.innerHTML = '';
+        citas.sort((a,b) => new Date(a.fecha + 'T' + a.hora) - new Date(b.fecha + 'T' + b.hora)).forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'cita-item';
+            div.innerHTML = `
+                <div>
+                    <h4 class="font-bold text-purple-900 text-lg">${c.paciente}</h4>
+                    <p class="text-sm text-gray-700 mt-1"><strong>Fecha:</strong> ${formatearFecha(c.fecha)} - <strong>Hora:</strong> ${c.hora}</p>
+                    <p class="text-sm text-gray-700 mt-1"><strong>Motivo:</strong> ${c.motivo || 'Sin especificar'}</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="abrirModalEditarCita(${c.id})" class="bg-blue-50 text-blue-600 px-3 py-1 rounded hover:bg-blue-100 text-sm"><i class="fa fa-pencil"></i> Editar</button>
+                    <button onclick="abrirModalEliminarCita(${c.id})" class="bg-red-50 text-red-600 px-3 py-1 rounded hover:bg-red-100 text-sm"><i class="fa fa-trash"></i> Eliminar</button>
+                </div>
+            `;
+            lista.appendChild(div);
+        });
+    }
+
+    function formatearFecha(fechaStr) {
+        const partes = fechaStr.split('-');
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    function abrirModalEditarCita(id) {
+        const cita = citas.find(c => c.id === id);
+        document.getElementById('idCitaEditar').value = id;
+        document.getElementById('modPaciente').value = cita.paciente;
+        document.getElementById('modFecha').value = cita.fecha;
+        document.getElementById('modHora').value = cita.hora;
+        document.getElementById('modMotivo').value = cita.motivo;
+        modalCita.style.display = "block";
+    }
+
+    function abrirModalEliminarCita(id) {
+        document.getElementById('idCitaEditar').value = id;
+        modalCita.style.display = "block";
+    }
+
+    function cerrarModalCita() {
+        modalCita.style.display = "none";
+    }
+
+    async function guardarEdicionCita() {
+        const id = parseInt(document.getElementById('idCitaEditar').value);
+        const idx = citas.findIndex(c => c.id === id);
+        citas[idx] = {
+            id: id,
+            paciente: document.getElementById('modPaciente').value,
+            fecha: document.getElementById('modFecha').value,
+            hora: document.getElementById('modHora').value,
+            motivo: document.getElementById('modMotivo').value
+        };
+        await guardarDatosEnNube();
+        actualizarListaCitas();
+        cerrarModalCita();
+        alert('✅ Cita actualizada');
+    }
+
+    async function eliminarCitaDesdeCalendario() {
+        const id = parseInt(document.getElementById('idCitaEditar').value);
+        if(confirm('¿Eliminar esta cita definitivamente?')){
+            citas = citas.filter(c => c.id !== id);
+            await guardarDatosEnNube();
+            actualizarListaCitas();
+            cerrarModalCita();
+            alert('🗑️ Cita eliminada');
+        }
+    }
+
+    document.getElementById('formNota').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const texto = document.getElementById('textoNota').value.trim(); if (!texto) return;
+        notas.push({ id: Date.now(), texto: texto, fecha: new Date().toLocaleString() });
+        await guardarDatosEnNube();
+        actualizarNotas();
+        e.target.reset();
+    });
+
+    function actualizarNotas() {
+        const lista = document.getElementById('listaNotas');
+        if (notas.length === 0) { lista.innerHTML = '<p class="text-gray-600 italic md:col-span-2">No hay notas guardadas.</p>'; return; }
+        lista.innerHTML = '';
+        notas.sort((a,b) => b.id - a.id).forEach(n => {
+            const div = document.createElement('div'); div.className = 'nota-item';
+            div.innerHTML = `
+                <p class="text-xs text-gray-500 mb-2">${n.fecha}</p>
+                <p class="text-gray-800 whitespace-pre-line mb-3">${n.texto}</p>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="abrirEditarNota(${n.id})" class="text-blue-600 hover:text-blue-800 text-sm font-medium"><i class="fa fa-pencil mr-1"></i> Editar</button>
+                    <button onclick="descargarNota('${encodeURIComponent(n.texto)}', '${encodeURIComponent(n.fecha)}')" class="text-purple-600 hover:text-purple-800 text-sm font-medium"><i class="fa fa-download mr-1"></i> Descargar</button>
+                    <button onclick="eliminarNota(${n.id})" class="text-red-600 hover:text-red-800 text-sm font-medium"><i class="fa fa-times mr-1"></i> Eliminar</button>
+                </div>
+            `;
+            lista.appendChild(div);
+        });
+    }
+
+    function abrirEditarNota(id) {
+        const nota = notas.find(n => n.id === id);
+        document.getElementById('idNotaEditar').value = id;
+        document.getElementById('textoNotaEditar').value = nota.texto;
+        document.getElementById('editarNotaContainer').classList.remove('hidden');
+        document.getElementById('textoNotaEditar').focus();
+    }
+
+    async function guardarEdicionNota() {
+        const id = parseInt(document.getElementById('idNotaEditar').value);
+        const nuevoTexto = document.getElementById('textoNotaEditar').value.trim();
+        if(!nuevoTexto) return;
+        const idx = notas.findIndex(n => n.id === id);
+        notas[idx].texto = nuevoTexto;
+        notas[idx].fecha = new Date().toLocaleString() + ' (editado)';
+        await guardarDatosEnNube();
+        actualizarNotas();
+        cerrarEdicionNota();
+    }
+
+    function cerrarEdicionNota() {
+        document.getElementById('editarNotaContainer').classList.add('hidden');
+        document.getElementById('textoNotaEditar').value = '';
+    }
+
+    function enviarvarNotaWhatsapp(textoCodificado, fechaCodificada) {
+        const texto = decodeURIComponent(textoCodificado);
+        const fecha = decodeURIComponent(fechaCodificada);
+        const mensaje = encodeURIComponent(`*📌 NOTA RÁPIDA*\n📝 Contenido:\n${texto}\n\n⏰ Registrado: ${fecha}`);
+        window.open(`https://wa.me/?text=${mensaje}`, '_blank');
+    }
+
+    function descargarNota(textoCodificado, fechaCodificada) {
+        const texto = decodeURIComponent(textoCodificado);
+        const fecha = decodeURIComponent(fechaCodificada);
+        const contenido = `NOTA RÁPIDA\nContenido:\n${texto}\n\nRegistrado: ${fecha}`;
+        const nombreArchivo = `Nota_${Date.now()}.txt`;
+        descargarArchivo(contenido, nombreArchivo);
+    }
+
+    async function eliminarNota(id) { 
+        if(confirm('¿Eliminar esta nota definitivamente?')){
+            notas = notas.filter(n => n.id !== id); 
+            await guardarDatosEnNube();
+            actualizarNotas(); 
+        }
+    }
+
+    // Cerrar modal si se hace clic fuera
+    window.onclick = function(event) {
+        if (event.target == modalCita) cerrarModalCita();
+    }
+</script>
+</body>
+</html>
